@@ -3,7 +3,29 @@
 const img = (id) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
 
-export const heroImage = img("photo-1551649001-7a2482d98d05");
+export const heroSlides = [
+  {
+    src: img("photo-1551649001-7a2482d98d05"),
+    alt: "Farmer working among fresh green crops",
+    label: "Fresh food crops",
+  },
+  {
+    src: img("photo-1447933601403-0c6688de566e"),
+    alt: "Coffee beans representing Cameroon's cash crops",
+    label: "Cash crops",
+  },
+  {
+    src: img("photo-1548550023-2bdb3c5beed7"),
+    alt: "Poultry raised on a farm",
+    label: "Poultry",
+  },
+  {
+    src: img("photo-1516467508483-a7212febe31a"),
+    alt: "Livestock on a farm",
+    label: "Livestock",
+  },
+];
+
 export const ctaImage = img("photo-1464226184884-fa280b87c399");
 
 export const regions = [
@@ -60,6 +82,7 @@ export const categories = [
   },
 ];
 
+// Illustrative profiles for the frontend prototype; these are not registered users.
 export const featuredFarmers = [
   {
     id: 1,
@@ -68,7 +91,6 @@ export const featuredFarmers = [
     region: "North-West",
     main: ["Irish potatoes"],
     side: ["Carrots", "Cabbage"],
-    rating: 4.8,
     status: "Harvesting now",
     statusType: "now",
     cover: img("photo-1518977676601-b53f82aba655"),
@@ -80,7 +102,6 @@ export const featuredFarmers = [
     region: "West",
     main: ["Tomatoes"],
     side: ["Pepper", "Maize"],
-    rating: 4.7,
     status: "Harvesting in 2 weeks",
     statusType: "soon",
     cover: img("photo-1592924357228-91a4daadcfea"),
@@ -92,7 +113,6 @@ export const featuredFarmers = [
     region: "South-West",
     main: ["Broiler chickens", "Eggs"],
     side: ["Turkeys"],
-    rating: 4.9,
     status: "Ready this week",
     statusType: "all",
     cover: img("photo-1506976785307-8732e854ad03"),
@@ -104,7 +124,6 @@ export const featuredFarmers = [
     region: "Centre",
     main: ["Cassava"],
     side: ["Plantain", "Cocoyams"],
-    rating: 4.6,
     status: "Available all year",
     statusType: "all",
     cover: img("photo-1540420773420-3366772f4999"),

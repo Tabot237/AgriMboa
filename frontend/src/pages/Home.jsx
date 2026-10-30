@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useReveal from "../hooks/useReveal";
 import {
-  heroImage,
+  heroSlides,
   ctaImage,
   regions,
   popularSearches,
@@ -32,7 +32,7 @@ const steps = [
   },
   {
     title: "Compare farmers",
-    text: "See each farmer's main products, quantities, harvest dates and ratings.",
+    text: "See each farmer's main products, quantities, harvest windows and available quantities.",
   },
   {
     title: "Contact them directly",
@@ -46,6 +46,40 @@ function Home() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("");
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
+
+  useEffect(() => {
+    // Preload the four small, responsive hero images so a slide is ready
+    // before it becomes visible. This does not block search or navigation.
+    heroSlides.forEach(({ src }) => {
+      const image = new Image();
+      image.src = src;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (carouselPaused || heroSlides.length < 2) return undefined;
+
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return undefined;
+
+    const timer = window.setInterval(() => {
+      if (!document.hidden) {
+        setActiveSlide((current) => (current + 1) % heroSlides.length);
+      }
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [carouselPaused]);
+
+  const showPreviousSlide = () => {
+    setActiveSlide((current) => (current - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  const showNextSlide = () => {
+    setActiveSlide((current) => (current + 1) % heroSlides.length);
+  };
 
   const goToMarketplace = (searchText, selectedRegion) => {
     const params = new URLSearchParams();
@@ -143,24 +177,76 @@ function Home() {
           </div>
 
           <div className="hero-visual hero-anim" style={{ "--d": "0.25s" }}>
-            <div className="hero-image">
-              <img src={heroImage} alt="Green farmland" onError={hideBrokenImage} />
+            <div
+              className="hero-image hero-carousel"
+              onMouseEnter={() => setCarouselPaused(true)}
+              onMouseLeave={() => setCarouselPaused(false)}
+              onFocus={() => setCarouselPaused(true)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setCarouselPaused(false);
+                }
+              }}
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Featured agricultural photographs"
+            >
+              {heroSlides.map((slide, index) => (
+                <img
+                  key={slide.src}
+                  className={`hero-slide${index === activeSlide ? " is-active" : ""}`}
+                  src={slide.src}
+                  alt={slide.alt}
+                  aria-hidden={index !== activeSlide}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  onError={hideBrokenImage}
+                />
+              ))}
+
+              <div className="hero-carousel-controls">
+                <button
+                  type="button"
+                  className="carousel-arrow"
+                  onClick={showPreviousSlide}
+                  aria-label="Show previous photograph"
+                >
+                  <span aria-hidden="true">&#8249;</span>
+                </button>
+                <div className="carousel-dots" aria-label="Choose a photograph">
+                  {heroSlides.map((slide, index) => (
+                    <button
+                      key={slide.label}
+                      type="button"
+                      className={`carousel-dot${index === activeSlide ? " is-active" : ""}`}
+                      onClick={() => setActiveSlide(index)}
+                      aria-label={`Show photograph ${index + 1}: ${slide.label}`}
+                      aria-pressed={index === activeSlide}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="carousel-arrow"
+                  onClick={showNextSlide}
+                  aria-label="Show next photograph"
+                >
+                  <span aria-hidden="true">&#8250;</span>
+                </button>
+              </div>
             </div>
 
             <div className="hero-float hero-float-top">
               <span className="dot dot-now"></span>
               <div>
-                <strong>Cocoa is in peak season</strong>
-                <small>South-West region</small>
+                <strong>Harvest availability</strong>
+                <small>Browse by product and region</small>
               </div>
             </div>
 
             <div className="hero-float hero-float-bottom">
-              <strong>55 of 50 bags covered</strong>
-              <small>3 farmers combined</small>
-              <div className="mini-bar">
-                <span></span>
-              </div>
+              <strong>Combined supply</strong>
+              <small>Find larger quantities across farms</small>
             </div>
           </div>
         </div>
@@ -178,6 +264,7 @@ function Home() {
               See the full calendar <span aria-hidden="true">&rarr;</span>
             </Link>
           </div>
+          <p className="season-disclaimer">Illustrative seasonal examples. Actual availability will be confirmed by farmers.</p>
         </div>
 
         <div className="season-marquee reveal">
@@ -251,13 +338,13 @@ function Home() {
           <div className="supply-card reveal" style={{ "--delay": "0.15s" }}>
             <div className="supply-head">
               <div>
-                <small>Your request</small>
+                <small>Illustrative example</small>
                 <strong>
                   {supplyExample.needed} {supplyExample.unit} of {supplyExample.product}
                 </strong>
                 <span className="supply-region">{supplyExample.region} region</span>
               </div>
-              <span className="supply-badge">Covered</span>
+              <span className="supply-badge">Example</span>
             </div>
 
             {supplyExample.farmers.map((farmer, index) => (
@@ -294,7 +381,7 @@ function Home() {
             </div>
 
             <Link to="/marketplace" className="btn btn-primary supply-btn">
-              Contact all 3 farmers
+              Explore available supply
             </Link>
           </div>
         </div>
@@ -304,13 +391,15 @@ function Home() {
       <section className="container farmers">
         <div className="section-head section-head-row reveal">
           <div>
-            <span className="section-eyebrow">Featured farmers</span>
+            <span className="section-eyebrow">Farmer profile examples</span>
             <h2>Meet the people behind the produce</h2>
           </div>
           <Link to="/marketplace" className="link-arrow">
             View all farmers <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>
+
+        <p className="farmer-disclaimer">These are demonstration profiles, not registered or verified AgriMboa farmers.</p>
 
         <div className="farmer-grid">
           {featuredFarmers.map((farmer, index) => (
@@ -352,9 +441,7 @@ function Home() {
                 </div>
 
                 <div className="farmer-footer">
-                  <span className="farmer-rating">
-                    <span aria-hidden="true">&#9733;</span> {farmer.rating}
-                  </span>
+                  <span className="farmer-profile-note">Example profile</span>
                   <Link to="/marketplace" className="link-arrow">
                     View profile <span aria-hidden="true">&rarr;</span>
                   </Link>
